@@ -1,0 +1,15 @@
+{
+  "dockerfile_lines": [],
+  "graphs": {
+    "supervisor": "src/agents/supervisor.py:supervisor_agent",
+    "main_agent": "src/agents/main.py:agent",
+    "legal_agent": "src/agents/legal.py:legal_agent",
+    "finance_agent": "src/agents/finance.py:finance_agent",
+    "governance_agent": "src/agents/governance.py:governance_agent",
+    "risk_agent": "src/agents/risk.py:risk_agent",
+    "reputation_agent": "src/agents/reputation.py:reputation_agent"
+  },
+  "python_version": "3.11",
+  "env": ".env",
+  "dependencies": ["."]
+}
