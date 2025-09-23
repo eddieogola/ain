@@ -11,11 +11,19 @@ from utils.types import APIResponse
 from utils.logging import logger
 
 from agents.main import agent
+from config import get_config
+from rag.indexer import Indexer
 
+config = get_config()
+
+indexer = Indexer(config)
 
 research_router = APIRouter()
 
 class ResearchMessage(BaseModel):
+    message: str
+
+class ChatMessage(BaseModel):
     message: str
 
 class DocumentUpload(BaseModel):
@@ -23,6 +31,7 @@ class DocumentUpload(BaseModel):
     file_data: str  # Base64 encoded file
 
 thread = {"configurable": {"thread_id": "1", "recursion_limit": 50}}
+chat_thread = {"configurable": {"thread_id": "chat_docs", "recursion_limit": 50}}
 
 convo_messages = []
 
@@ -100,21 +109,20 @@ async def document_indexing_endpoint(document: DocumentUpload):
         logger.debug(f"Received document upload: {document.filename}")
         
         # Create a directory to store uploaded files if it doesn't exist
-        upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
-        
+        os.makedirs(config.upload_dir, exist_ok=True)
+
         # Decode the base64 file data
         file_bytes = base64.b64decode(document.file_data)
         
         # Save the file
-        file_path = os.path.join(upload_dir, document.filename)
+        file_path = os.path.join(config.upload_dir, document.filename)
         with open(file_path, "wb") as f:
             f.write(file_bytes)
         
         logger.debug(f"Document saved to {file_path}")
         
-        # Here you would typically add code to process the PDF,
-        # extract text, and index it for your research agent
+
+        indexer.index_documents(file_path=file_path)
         
         response = {
             "code": 200,
@@ -138,4 +146,70 @@ async def document_indexing_endpoint(document: DocumentUpload):
             "data": None
         }
         
+        return APIResponse(**response)
+    
+
+chat_messages = []
+
+@research_router.post("/chat-docs", response_model=APIResponse)
+async def chat_documents_endpoint(query: ChatMessage):
+    """
+    Endpoint to handle queries against indexed documents.
+    """
+    if not query:
+        response = {
+            "code": 400,
+            "status": "error",
+            "message": "Query parameter is required",
+            "data": None
+        }
+        return APIResponse(**response)
+    
+    try:
+        logger.debug(f"Received document chat query: {query}")
+
+        retrieved_context = indexer.search(query=query.message)
+        logger.debug(f"Retrieved context: {retrieved_context}")
+
+        chat_messages.append(HumanMessage(content=f"Context: {retrieved_context}\n\nQuestion: {query.message}"))
+
+        model_response = await config.llm.ainvoke({"messages": chat_messages}, config=chat_thread)
+
+        logger.debug(f"Model response: {model_response}")
+
+        messages = model_response.get("messages")
+
+        if messages:
+            logger.debug(f"Model response messages: {convo_messages}")
+            last_message = messages[-1]
+            if last_message.type == "ai":
+                convo_messages.append(AIMessage(content=last_message.content))
+                response = {
+                        "code": 200,
+                        "status": "success",
+                        "message": None,
+                        "data": {
+                            "message": last_message.content
+                        }
+                    }
+        else:
+            response = {
+                "code": 500,
+                "status": "error",
+                "message": "No response from the model",
+                "data": None
+            }
+                
+
+        return APIResponse(**response)
+    except Exception as e:
+        logger.exception(f"Exception occurred in document chat endpoint: {str(e)}")
+
+        response = {
+            "code": 500,
+            "status": "error",
+            "message": "An error occurred while processing the document chat",
+            "data": None
+        }
+
         return APIResponse(**response)

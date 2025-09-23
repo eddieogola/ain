@@ -18,6 +18,10 @@ dependencies = [
     "langchain-huggingface>=0.3.1",
     "langchain-google-genai>=2.1.12",
     "llama-index>=0.14.2",
+    "langchain-chroma>=0.2.6",
+    "langchain-text-splitters>=0.3.11",
+    "langchain-community>=0.3.29",
+    "pypdf>=6.1.0",
 ]
 
 [dependency-groups]

@@ -17,3 +17,5 @@ htmlcov/
 .idea/
 
 .ipynb_checkpoints/
+*.bin
+*.sqlite3

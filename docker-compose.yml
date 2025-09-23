@@ -16,6 +16,8 @@ services:
           path: server/Dockerfile.server
         - action: restart
           path: server/src
+        - action: restart
+          path: server/.env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s
