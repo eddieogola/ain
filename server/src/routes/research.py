@@ -11,12 +11,9 @@ from utils.types import APIResponse
 from utils.logging import logger
 
 from agents.main import agent
-from config import get_config
-from rag.indexer import Indexer
+from agents.rag import agent as rag_agent
 
-config = get_config()
 
-indexer = Indexer(config)
 
 research_router = APIRouter()
 
@@ -50,18 +47,12 @@ async def research_endpoint(research_message: ResearchMessage):
 
         convo_messages.append(HumanMessage(content=research_message.message))
 
-        model_response = await agent.ainvoke({"messages": convo_messages}, config=thread)
-        
-        logger.debug(f"Model response: {model_response}")
-
-        messages = model_response.get("messages")
-
-        if messages:
-            logger.debug(f"Model response messages: {convo_messages}")
-            last_message = messages[-1]
-            if last_message.type == "ai":
-                convo_messages.append(AIMessage(content=last_message.content))
-                response = {
+        async for chunk in agent.astream({"messages": convo_messages}, config=thread, stream_mode="updates"):
+            if chunk.get("messages"):
+                last_message = chunk["messages"][-1]
+                if last_message.type == "ai":
+                    convo_messages.append(AIMessage(content=last_message.content))
+                    response = {
                         "code": 200,
                         "status": "success",
                         "message": None,
@@ -69,14 +60,33 @@ async def research_endpoint(research_message: ResearchMessage):
                             "message": last_message.content
                         }
                     }
-        else:
-            response = {
-                "code": 500,
-                "status": "error",
-                "message": "No response from the model",
-                "data": None
-            }
-                
+  
+            else:
+                response = {
+                    "code": 500,
+                    "status": "error",
+                    "message": "No response from the model",
+                    "data": None
+                }
+
+                          # logger.debug(f"Model response: {model_response}")
+
+        # messages = model_response.get("messages")
+
+        # if messages:
+        #     logger.debug(f"Model response messages: {convo_messages}")
+        #     last_message = messages[-1]
+        #     if last_message.type == "ai":
+        #         convo_messages.append(AIMessage(content=last_message.content))
+        #         response = {
+        #                 "code": 200,
+        #                 "status": "success",
+        #                 "message": None,
+        #                 "data": {
+        #                     "message": last_message.content
+        #                 }
+        #             }
+                        
 
         return APIResponse(**response)
     except Exception as e:
@@ -150,7 +160,6 @@ async def document_indexing_endpoint(document: DocumentUpload):
     
 
 chat_messages = []
-
 @research_router.post("/chat-docs", response_model=APIResponse)
 async def chat_documents_endpoint(query: ChatMessage):
     """
@@ -168,12 +177,9 @@ async def chat_documents_endpoint(query: ChatMessage):
     try:
         logger.debug(f"Received document chat query: {query}")
 
-        retrieved_context = indexer.search(query=query.message)
-        logger.debug(f"Retrieved context: {retrieved_context}")
+        chat_messages.append(HumanMessage(content=query.message))
 
-        chat_messages.append(HumanMessage(content=f"Context: {retrieved_context}\n\nQuestion: {query.message}"))
-
-        model_response = await config.llm.ainvoke({"messages": chat_messages}, config=chat_thread)
+        model_response = await rag_agent.stream({"messages": chat_messages}, config=chat_thread, stream_mode=True)
 
         logger.debug(f"Model response: {model_response}")
 

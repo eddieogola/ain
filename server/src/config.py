@@ -13,7 +13,6 @@ from memory.short_term import short_memory
 is_prod = True if os.getenv("ENVIRONMENT") == "prod" else False
 
 from langchain.chat_models import init_chat_model
-from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 # https://www.tavily.com/
@@ -53,8 +52,8 @@ embed_model_params = {
 }
 
 # create an absolute path to the uploads directory
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rag/data/uploads")
-VECTOR_STORE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rag/data/storage")
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "rag/data/uploads")
+VECTOR_STORE_DIR = os.path.join(os.path.dirname(__file__), "rag/data/storage")
 
 class Config:
     """

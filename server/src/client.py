@@ -1,20 +1,13 @@
+# https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps
 import streamlit as st
 import requests
-import pandas as pd
-from io import StringIO
 import base64
+
+
+# FUNCTIONS
 
 BASE_API_URL = "http://server:8000/api/v1"
 
-st.set_page_config(
-    page_title="Africa Insights Navigator", 
-    page_icon="✨",
-    layout="wide"
-)
-st.title("Africa Insights Navigator")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
 def send_message(message):
     # Use server service name when running in Docker, localhost for local development
@@ -24,14 +17,13 @@ def send_message(message):
         response.raise_for_status()
         data = response.json()
         message = data.get("message", "")
-        print(data)
+
         if data.get("code") != 200:
             return f"Error: {message or 'Unknown error occurred.'}"
         return data.get("data", {}).get("message", "No report found.")
     except Exception as e:
         return f"Error: {e}"
 
-# Function to upload PDF to the FastAPI endpoint
 def upload_pdf_to_api(file_bytes, filename):
     url = f"{BASE_API_URL}/doc-index"
     
@@ -56,24 +48,35 @@ def upload_pdf_to_api(file_bytes, filename):
     except Exception as e:
         return False, f"Error: {e}"
 
+
+# UI SETUP
+st.set_page_config(
+    page_title="Africa Insights Navigator", 
+    page_icon="✨",
+    layout="wide"
+)
+st.title("Africa Insights Navigator")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 with st.chat_message("assistant"):
     st.write("How can I help you with your research today?")
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+        st.markdown(msg["content"])
 
 user_input = st.chat_input("Type your message here...")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
-        st.write(user_input)
-    
+        st.markdown(user_input)
+
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = send_message(user_input)
-        st.write(response)
+            response = st.write_stream(send_message(user_input))
     
     st.session_state.messages.append({"role": "assistant", "content": response})
 
@@ -87,7 +90,8 @@ if uploaded_file is not None:
         "Filename": uploaded_file.name,
         "File size": f"{uploaded_file.size / 1024:.2f} KB"
     }
-    st.write(file_details)
+    st.write("File Name:", file_details["Filename"])
+    st.write("File Size:", file_details["File size"])
     
     # Add a button to confirm upload
     if st.button("Upload Document"):
