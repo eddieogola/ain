@@ -4,6 +4,8 @@ Research endpoint module for handling research-related requests.
 from fastapi import APIRouter
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage, AIMessage
+import base64
+import os
 
 from utils.types import APIResponse
 from utils.logging import logger
@@ -15,6 +17,10 @@ research_router = APIRouter()
 
 class ResearchMessage(BaseModel):
     message: str
+
+class DocumentUpload(BaseModel):
+    filename: str
+    file_data: str  # Base64 encoded file
 
 thread = {"configurable": {"thread_id": "1", "recursion_limit": 50}}
 
@@ -74,4 +80,62 @@ async def research_endpoint(research_message: ResearchMessage):
             "data": None
         }
 
+        return APIResponse(**response)
+
+@research_router.post("/doc-index", response_model=APIResponse)
+async def document_indexing_endpoint(document: DocumentUpload):
+    """
+    Endpoint to receive and process uploaded PDF documents.
+    """
+    if not document.filename or not document.file_data:
+        response = {
+            "code": 400,
+            "status": "error",
+            "message": "Filename and file data are required",
+            "data": None
+        }
+        return APIResponse(**response)
+    
+    try:
+        logger.debug(f"Received document upload: {document.filename}")
+        
+        # Create a directory to store uploaded files if it doesn't exist
+        upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Decode the base64 file data
+        file_bytes = base64.b64decode(document.file_data)
+        
+        # Save the file
+        file_path = os.path.join(upload_dir, document.filename)
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+        
+        logger.debug(f"Document saved to {file_path}")
+        
+        # Here you would typically add code to process the PDF,
+        # extract text, and index it for your research agent
+        
+        response = {
+            "code": 200,
+            "status": "success",
+            "message": None,
+            "data": {
+                "message": f"Document '{document.filename}' uploaded and indexed successfully",
+                "file_path": file_path
+            }
+        }
+        
+        return APIResponse(**response)
+    
+    except Exception as e:
+        logger.exception(f"Exception occurred in document indexing endpoint: {str(e)}")
+        
+        response = {
+            "code": 500,
+            "status": "error",
+            "message": f"An error occurred while processing the document: {str(e)}",
+            "data": None
+        }
+        
         return APIResponse(**response)

@@ -1,5 +1,10 @@
 import streamlit as st
 import requests
+import pandas as pd
+from io import StringIO
+import base64
+
+BASE_API_URL = "http://server:8000/api/v1"
 
 st.set_page_config(
     page_title="Africa Insights Navigator", 
@@ -13,9 +18,7 @@ if "messages" not in st.session_state:
 
 def send_message(message):
     # Use server service name when running in Docker, localhost for local development
-    base_url = "http://server:8000" 
-
-    url = f"{base_url}/api/v1/research"
+    url = f"{BASE_API_URL}/research"
     try:
         response = requests.post(url, json={"message": message})
         response.raise_for_status()
@@ -27,6 +30,31 @@ def send_message(message):
         return data.get("data", {}).get("message", "No report found.")
     except Exception as e:
         return f"Error: {e}"
+
+# Function to upload PDF to the FastAPI endpoint
+def upload_pdf_to_api(file_bytes, filename):
+    url = f"{BASE_API_URL}/doc-index"
+    
+    try:
+        # Encode the file as base64
+        encoded_file = base64.b64encode(file_bytes).decode('utf-8')
+        
+        # Send the file to the API
+        response = requests.post(
+            url, 
+            json={
+                "filename": filename,
+                "file_data": encoded_file
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get("code") != 200:
+            return False, f"Error: {data.get('message', 'Unknown error occurred.')}"
+        return True, data.get("data", {}).get("message", "Document uploaded successfully.")
+    except Exception as e:
+        return False, f"Error: {e}"
 
 with st.chat_message("assistant"):
     st.write("How can I help you with your research today?")
@@ -48,3 +76,29 @@ if user_input:
         st.write(response)
     
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+# PDF Upload section
+st.subheader("Upload Research Document")
+uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+
+if uploaded_file is not None:
+    # Show file details
+    file_details = {
+        "Filename": uploaded_file.name,
+        "File size": f"{uploaded_file.size / 1024:.2f} KB"
+    }
+    st.write(file_details)
+    
+    # Add a button to confirm upload
+    if st.button("Upload Document"):
+        with st.spinner("Uploading document..."):
+            # Get file bytes
+            file_bytes = uploaded_file.getvalue()
+            
+            # Send to API
+            success, message = upload_pdf_to_api(file_bytes, uploaded_file.name)
+            
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
