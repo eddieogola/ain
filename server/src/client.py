@@ -11,7 +11,7 @@ BASE_API_URL = "http://server:8000/api/v1"
 
 def send_message(message):
     # Use server service name when running in Docker, localhost for local development
-    url = f"{BASE_API_URL}/research"
+    url = f"{BASE_API_URL}/chat-docs"
     try:
         response = requests.post(url, json={"message": message})
         response.raise_for_status()
@@ -76,9 +76,18 @@ if user_input:
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = st.write_stream(send_message(user_input))
+            response = st.markdown(send_message(user_input))
     
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+# Model Selection
+st.subheader("Model Selection")
+option = st.selectbox(
+    "Select a model",
+    ("Gemini 2.5 Flash", ""),
+)
+
+st.write("You selected:", option)
 
 # PDF Upload section
 st.subheader("Upload Research Document")

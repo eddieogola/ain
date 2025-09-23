@@ -29,6 +29,21 @@ services:
       - "8000:8000"
     env_file:
       - ./server/.env
+    depends_on:
+      - llm
+      - embedding-model
+
+  llm:
+    provider:
+      type: model
+      options:
+        model: ai/gemma3
+        context_size: 14000
+  embedding-model:
+    provider:
+      type: model
+      options:
+        model: ai/embeddinggemma:latest
 
   client:
     build:
