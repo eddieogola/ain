@@ -3,7 +3,6 @@ import streamlit as st
 import requests
 import base64
 
-
 # FUNCTIONS
 
 BASE_API_URL = "http://server:8000/api/v1"
@@ -11,7 +10,7 @@ BASE_API_URL = "http://server:8000/api/v1"
 
 def send_message(message):
     # Use server service name when running in Docker, localhost for local development
-    url = f"{BASE_API_URL}/chat-docs"
+    url = f"{BASE_API_URL}/research"
     try:
         response = requests.post(url, json={"message": message})
         response.raise_for_status()
