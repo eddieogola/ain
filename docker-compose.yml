@@ -27,29 +27,28 @@ services:
       - ain-network
     ports:
       - "8000:8000"
-    env_file:
-      - ./server/.env
-    environment:
-      LLAMA_ARG_CTX_SIZE: 32000
-    depends_on:
-      - llm
-      - embedding-model
+    # env_file:
+    #   - ./server/.env
 
-  llm:
-    provider:
-      type: model
-      options:
-        model: ai/gemma3
-        runtime_flags:
-          - "--ctx-size"
-          - "32000"
-          - "--temp"
-          - "0.01"
-  embedding-model:
-    provider:
-      type: model
-      options:
-        model: ai/embeddinggemma:latest
+    # depends_on:
+    #   - llm
+    #   - embedding-model
+
+  # llm:
+  #   provider:
+  #     type: model
+  #     options:
+  #       model: ai/gemma3
+  #       runtime_flags:
+  #         - "--ctx-size"
+  #         - "32000"
+  #         - "--temp"
+  #         - "0.01"
+  # embedding-model:
+  #   provider:
+  #     type: model
+  #     options:
+  #       model: ai/embeddinggemma:latest
 
   client:
     build:
@@ -77,8 +76,8 @@ services:
       - "8501:8501"
     networks:
       - ain-network
-    env_file:
-      - ./server/.env
+    # env_file:
+    #   - ./server/.env
 
 networks:
   ain-network:
