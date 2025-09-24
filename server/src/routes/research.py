@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 import base64
 import os
 
+from rag.indexer import Indexer
 from utils.types import APIResponse
 from utils.logging import logger
 
@@ -106,6 +107,7 @@ async def document_indexing_endpoint(document: DocumentUpload):
     
     try:
         logger.debug(f"Received document upload: {document.filename}")
+        indexer = Indexer(config)
         
         # Create a directory to store uploaded files if it doesn't exist
         os.makedirs(config.upload_dir, exist_ok=True)
