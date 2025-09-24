@@ -28,7 +28,7 @@ def finance_research_llm(state: ResearcherState) -> dict:
     
     Returns updated state with the model's response.
     """
-    logger.debug(f"@node finance_research_llm: Finance researcher state: {state}")
+    logger.debug(f"@node finance_research_llm")
     
     return {
         "researcher_messages": [

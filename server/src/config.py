@@ -50,12 +50,12 @@ available_models = {
         "base_url": MODEL_BASE_URL,
     },
     "Gemini 2.5 Flash":{
-        "model": "gemini-2.5-flash",
+        "model": "google_genai:gemini-2.5-flash",
         "api_key": GEMINI_API_KEY,
         "base_url": GEMINI_BASE_URL,
     },
     "Gemini 2.5 Pro":{
-        "model": "gemini-2.5-pro",
+        "model": "google_genai:gemini-2.5-pro",
         "api_key": GEMINI_API_KEY,
         "base_url": GEMINI_BASE_URL,
     }
@@ -67,6 +67,12 @@ _model_params = {
     "api_key": MODEL_API_KEY,
     "base_url": MODEL_BASE_URL,
 }
+
+# _model_params = {
+#     "model": available_models["Gemini 2.5 Flash"]["model"],
+#     "api_key": available_models["Gemini 2.5 Flash"]["api_key"],
+#     "base_url": available_models["Gemini 2.5 Flash"]["base_url"],
+# }
 
 _embed_model_params = {
     "model": EMBEDDING_MODEL_NAME,

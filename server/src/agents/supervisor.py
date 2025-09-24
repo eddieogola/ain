@@ -89,7 +89,7 @@ supervisor_model_with_tools = supervisor_model.bind_tools(supervisor_tools)
 # System constants
 # Maximum number of tool call iterations for individual researcher agents
 # This prevents infinite loops and controls research depth per topic
-MAX_RESEARCHER_ITERATIONS = 3 # Calls to think_tool + web_search + handoff to sub-agent
+MAX_RESEARCHER_ITERATIONS = 6 # Calls to think_tool + web_search + handoff to sub-agent
 
 # Maximum number of concurrent research agents the supervisor can launch
 # This is passed to the lead_researcher_prompt to limit parallel research tasks
@@ -111,6 +111,8 @@ async def supervisor(state: SupervisorState) -> Command[Literal["supervisor_tool
     Returns:
         Command to proceed to supervisor_tools node with updated state
     """
+    logger.debug(f"@node supervisor")
+
     supervisor_messages = state.get("supervisor_messages", [])
 
     # Prepare system message with current date and constraints
@@ -153,7 +155,7 @@ async def supervisor_tools(state: SupervisorState) -> Command[Literal["superviso
     research_iterations = state.get("research_iterations", 0)
     most_recent_message = supervisor_messages[-1]
 
-    logger.debug(f"@func supervisor_tools:  \n Research Iterations: {research_iterations} \n Most Recent Message Tool Calls: {most_recent_message.tool_calls} Supervisor messages: {supervisor_messages}")
+    logger.debug(f"@func supervisor_tools:  \n Research Iterations: {research_iterations} \n Most Recent Message Tool Calls: {most_recent_message.tool_calls}")
 
     # Initialize variables for single return pattern
     tool_messages = []
@@ -169,7 +171,10 @@ async def supervisor_tools(state: SupervisorState) -> Command[Literal["superviso
         for tool_call in most_recent_message.tool_calls
     )
 
-    if exceeded_iterations or no_tool_calls or research_complete:
+    logger.debug(f"@func supervisor_tools:  \n Exceeded Iterations: {exceeded_iterations} \n No Tool Calls: {no_tool_calls} \n Research Complete: {research_complete}")
+
+
+    if exceeded_iterations or no_tool_calls or (research_complete and research_iterations > 2):
         should_end = True
         next_step = END
 

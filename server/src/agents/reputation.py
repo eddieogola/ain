@@ -28,7 +28,7 @@ def reputation_research_llm(state: ResearcherState) -> dict:
     
     Returns updated state with the model's response.
     """
-    logger.debug(f"@node reputation_research_llm: Reputation researcher state: {state}")
+    logger.debug(f"@node reputation_research_llm")
     
     return {
         "researcher_messages": [

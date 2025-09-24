@@ -86,7 +86,7 @@ def should_continue(state: ResearcherState) -> Literal["tool_node", "compress_re
     """
     messages = state["researcher_messages"]
 
-    logger.debug(f"@func should_continue: Researcher messages: {messages}")
+    logger.debug(f"@func should_continue")
     last_message = messages[-1]
 
     # If the LLM makes a tool call, continue to tool execution

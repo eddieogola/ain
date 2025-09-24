@@ -33,19 +33,15 @@ def web_search(
         include_raw_content=True,   
     )
     logger.debug(f"@tool web_search received {len(search_results[0]['results'])} results from Tavily\n\n")
-    logger.debug(f"@tool web_search search_results: {search_results}\n\n")
 
     # Deduplicate results by URL to avoid processing duplicate content
     unique_results = deduplicate_search_results(search_results)
-
-    logger.debug(f"@tool web_search deduplicated to {len(unique_results)} unique results\n\n")
-    logger.debug(f"@tool web_search unique_results: {unique_results}\n\n")
 
     # Process results with summarization
     summarized_results = process_search_results(unique_results)
 
     # Format output for consumption
     formatted_search = format_search_output(summarized_results)
-    logger.debug(f"@tool web_search completed: returning formatted results: {formatted_search}")
+    logger.debug(f"@tool web_search completed: returning formatted results of length: {len(formatted_search)}")
 
     return formatted_search

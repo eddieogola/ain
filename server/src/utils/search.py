@@ -74,7 +74,6 @@ def summarize_webpage_content(webpage_content: str) -> str:
             ))
         ])
 
-        logger.debug(f"@func summarize_webpage_content Generated summary: {summary}")
 
         # Format summary with clear structure
         formatted_summary = (

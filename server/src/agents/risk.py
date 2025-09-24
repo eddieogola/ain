@@ -28,7 +28,7 @@ def risk_research_llm(state: ResearcherState) -> dict:
     
     Returns updated state with the model's response.
     """
-    logger.debug(f"@node risk_research_llm: Risk researcher state: {state}")
+    logger.debug(f"@node risk_research_llm")
     
     return {
         "researcher_messages": [

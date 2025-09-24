@@ -29,7 +29,7 @@ def governance_research_llm(state: ResearcherState) -> dict:
     
     Returns updated state with the model's response.
     """
-    logger.debug(f"@node governance_research_llm: Governance researcher state: {state}")
+    logger.debug(f"@node governance_research_llm")
 
     return {
         "researcher_messages": [
