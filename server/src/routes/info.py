@@ -26,12 +26,16 @@ async def info():
     else:
         filtered_models = all_models
 
+    # get model key of the active model by checking config.available_models values against the config.model_params.get("model") the active_model is the corresponding key
+    active_model = next((k for k, v in config.available_models.items() if v.get("model") == config.model_params.get("model")), None)
+
     info_data = {
         "service": "Africa Insights Navigator",
         "version": "0.1.0",
         "description": "A service that provides AI-powered due diligence research capabilities.",
         "models": {
             "available_models": filtered_models,
+            "active_model": active_model
         }
         }
     return APIResponse(code=200, status="success", message=None, data=info_data)

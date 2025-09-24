@@ -95,6 +95,7 @@ class Config:
         self.vector_store_dir = VECTOR_STORE_DIR
         self.max_chunk_size = 1000
         self.available_models = available_models
+        self.model_params = _model_params
         self.is_prod = is_prod
 
 

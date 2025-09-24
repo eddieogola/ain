@@ -12,6 +12,9 @@ from utils.logging import logger
 
 from agents.main import agent
 from agents.rag import agent as rag_agent
+from config import get_config
+
+config = get_config()
 
 research_router = APIRouter()
 

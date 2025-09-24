@@ -82,13 +82,15 @@ st.title("Africa Insights Navigator")
 
 header_col1, header_col2 = st.columns(2)
 
+info = get_info()
+
 if "settings" not in st.session_state:
     st.session_state.settings = {
-        "model": "Gemini 2.5 Flash"
+        "model": info.get("models", {}).get("active_model")
     }
-
 model_selected = st.session_state.settings.get("model")
-info = get_info()
+
+
 @st.dialog("Settings")
 def settings_dialog():
     st.subheader("Adjust your settings below:")
