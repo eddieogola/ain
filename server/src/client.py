@@ -3,16 +3,27 @@ import streamlit as st
 import requests
 import base64
 
-# FUNCTIONS
-
+# FUNCTIONS 
+    
+# Use server service name when running in Docker, localhost for local development
 BASE_API_URL = "http://server:8000/api/v1"
 
+def get_info():
+    url = f"{BASE_API_URL}/info"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("code") != 200:
+            return f"Error: {data.get('message', 'Unknown error occurred.')}"
+        return data.get("data", {})
+    except Exception as e:
+        return f"Error: {e}"
 
-def send_message(message):
-    # Use server service name when running in Docker, localhost for local development
+def send_message(message, model="default"):
     url = f"{BASE_API_URL}/research"
     try:
-        response = requests.post(url, json={"message": message})
+        response = requests.post(url, json={"message": message, "model": model})
         response.raise_for_status()
         data = response.json()
         message = data.get("message", "")
@@ -47,7 +58,6 @@ def upload_pdf_to_api(file_bytes, filename):
     except Exception as e:
         return False, f"Error: {e}"
 
-
 # UI SETUP
 st.set_page_config(
     page_title="Africa Insights Navigator", 
@@ -55,6 +65,32 @@ st.set_page_config(
     layout="wide"
 )
 st.title("Africa Insights Navigator")
+
+header_col1, header_col2 = st.columns(2)
+
+if "settings" not in st.session_state:
+    st.session_state.settings = {
+        "model": "Gemini 2.5 Flash"
+    }
+
+model_selected = st.session_state.settings.get("model")
+info = get_info()
+
+@st.dialog("Settings")
+def settings_dialog():
+    st.subheader("Adjust your settings below:")
+
+    available_models = info.get("models", {}).get("available_models", [])
+    model_selected = st.selectbox(
+        "Select a model",
+    available_models
+    )
+    st.session_state.settings.update({"model": model_selected})
+
+
+with header_col1:
+    if st.button("Settings"):
+        settings_dialog()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -75,22 +111,12 @@ if user_input:
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = st.markdown(send_message(user_input))
+            response = st.markdown(send_message(user_input, model=model_selected))
     
     st.session_state.messages.append({"role": "assistant", "content": response})
 
-# Model Selection
-st.subheader("Model Selection")
-option = st.selectbox(
-    "Select a model",
-    ("Gemini 2.5 Flash", ""),
-)
-
-st.write("You selected:", option)
-
-# PDF Upload section
-st.subheader("Upload Research Document")
-uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+with header_col2:
+    uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file is not None:
     # Show file details
@@ -100,7 +126,8 @@ if uploaded_file is not None:
     }
     st.write("File Name:", file_details["Filename"])
     st.write("File Size:", file_details["File size"])
-    
+
+
     # Add a button to confirm upload
     if st.button("Upload Document"):
         with st.spinner("Uploading document..."):

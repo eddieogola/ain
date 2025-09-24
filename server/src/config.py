@@ -15,40 +15,63 @@ is_prod = True if os.getenv("ENVIRONMENT") == "prod" else False
 from langchain.chat_models import init_chat_model
 from langchain_openai import OpenAIEmbeddings
 
-# https://www.tavily.com/
+# Environment variables
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-
-MODEL_BASE_URL =  os.getenv("MODEL_BASE_URL")
+MODEL_BASE_URL = os.getenv("MODEL_BASE_URL")
 MODEL_NAME = os.getenv("MODEL_NAME")
 MODEL_API_KEY = os.getenv("MODEL_API_KEY")
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "gemini-embedding-001")
+EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL")
 
-if not TAVILY_API_KEY:
-    raise ValueError("TAVILY_API_KEY environment variable is not set.")
 
-if not MODEL_BASE_URL:
-    raise ValueError("MODEL_BASE_URL environment variable is not set.")
+# Validate required environment variables
+required_vars = {
+    "TAVILY_API_KEY": TAVILY_API_KEY,
+    "MODEL_BASE_URL": MODEL_BASE_URL,
+    "MODEL_NAME": MODEL_NAME,
+    "MODEL_API_KEY": MODEL_API_KEY,
+    "EMBEDDING_MODEL_NAME": EMBEDDING_MODEL_NAME,
+    "GEMINI_API_KEY": GEMINI_API_KEY,
+    "GEMINI_BASE_URL": GEMINI_BASE_URL,
+}
 
-if not MODEL_NAME:
-    raise ValueError("MODEL_NAME environment variable is not set.")
+for var_name, var_value in required_vars.items():
+    if not var_value:
+        raise ValueError(f"{var_name} environment variable is not set.")
 
-if not MODEL_API_KEY:
-    raise ValueError("MODEL_API_KEY environment variable is not set.")
 
-if not EMBEDDING_MODEL_NAME:
-    raise ValueError("EMBEDDING_MODEL_NAME environment variable is not set.")
+# Available models configuration
+# default will only be available in dev mode
+available_models = {
+    "default": {
+        "model": MODEL_NAME,
+        "api_key": MODEL_API_KEY,
+        "base_url": MODEL_BASE_URL,
+    },
+    "Gemini 2.5 Flash":{
+        "model": "gemini-2.5-flash",
+        "api_key": GEMINI_API_KEY,
+        "base_url": GEMINI_BASE_URL,
+    },
+    "Gemini 2.5 Pro":{
+        "model": "gemini-2.5-pro",
+        "api_key": GEMINI_API_KEY,
+        "base_url": GEMINI_BASE_URL,
+    }
+}
 
-model_params = {
+
+_model_params = {
     "model": MODEL_NAME,
     "api_key": MODEL_API_KEY,
     "base_url": MODEL_BASE_URL,
 }
 
-embed_model_params = {
+_embed_model_params = {
     "model": EMBEDDING_MODEL_NAME,
     "openai_api_base": MODEL_BASE_URL,
     "api_key": MODEL_API_KEY,
-
 }
 
 # create an absolute path to the uploads directory
@@ -62,13 +85,15 @@ class Config:
     
     def __init__(self):
         self.web_search_client = TavilyClient(api_key=TAVILY_API_KEY)
-        self.llm =  init_chat_model(**model_params)
-        self.writer_llm = init_chat_model(**model_params)
-        self.embed_model = OpenAIEmbeddings(**embed_model_params)
+        self.llm =  init_chat_model(**_model_params)
+        self.writer_llm = init_chat_model(**_model_params)
+        self.embed_model = OpenAIEmbeddings(**_embed_model_params)
         self.short_term_memory = short_memory
         self.upload_dir = UPLOAD_DIR
         self.vector_store_dir = VECTOR_STORE_DIR
-        self.max_chunk_size = 1000 #To control the size of text chunks for processing and to fit in the context window of the LLM.
+        self.max_chunk_size = 1000
+        self.available_models = available_models
+        self.is_prod = is_prod
 
 
 @lru_cache(maxsize=1)
@@ -80,3 +105,14 @@ def get_config() -> Config:
     """
 
     return Config()
+
+
+def update_config(model_params):
+    """
+    Updates the cached Config object with new model parameters.
+    Args:
+        model_params (dict): New model parameters to update the configuration.
+    """
+    get_config.cache_clear()
+
+    _model_params.update(model_params)

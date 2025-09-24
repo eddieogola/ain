@@ -38,7 +38,11 @@ services:
       type: model
       options:
         model: ai/gemma3
-        context_size: 14000
+        runtime_flags:
+          - "--ctx-size"
+          - "32000"
+          - "--temp"
+          - "0.01"
   embedding-model:
     provider:
       type: model

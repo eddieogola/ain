@@ -19,9 +19,11 @@ research_router = APIRouter()
 
 class ResearchMessage(BaseModel):
     message: str
+    model: str = "default"
 
 class ChatMessage(BaseModel):
     message: str
+    model: str = "default"
 
 class DocumentUpload(BaseModel):
     filename: str
@@ -34,6 +36,7 @@ convo_messages = []
 
 @research_router.post("/research", response_model=APIResponse)
 async def research_endpoint(research_message: ResearchMessage):
+    
     if not research_message.message:
         response = {
             "code": 400,
@@ -43,7 +46,7 @@ async def research_endpoint(research_message: ResearchMessage):
         }
         return APIResponse(**response)
     try:
-        logger.debug(f"Received research request: {research_message.message}")
+        logger.debug(f"Received research request: {research_message}")
 
         convo_messages.append(HumanMessage(content=research_message.message))
 
