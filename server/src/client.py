@@ -20,10 +20,10 @@ def get_info():
     except Exception as e:
         return f"Error: {e}"
 
-def send_message(message, model="default"):
+def send_message(message):
     url = f"{BASE_API_URL}/research"
     try:
-        response = requests.post(url, json={"message": message, "model": model})
+        response = requests.post(url, json={"message": message})
         response.raise_for_status()
         data = response.json()
         message = data.get("message", "")
@@ -58,6 +58,20 @@ def upload_pdf_to_api(file_bytes, filename):
     except Exception as e:
         return False, f"Error: {e}"
 
+
+def update_model_api(model_name):
+    url = f"{BASE_API_URL}/update_model"
+    try:
+        response = requests.post(url, json={"model_name": model_name})
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get("code") != 200:
+            return False, f"Error: {data.get('message', 'Unknown error occurred.')}"
+        return True, data.get("message", "Model updated successfully.")
+    except Exception as e:
+        return False, f"Error: {e}"
+    
 # UI SETUP
 st.set_page_config(
     page_title="Africa Insights Navigator", 
@@ -75,17 +89,29 @@ if "settings" not in st.session_state:
 
 model_selected = st.session_state.settings.get("model")
 info = get_info()
-
 @st.dialog("Settings")
 def settings_dialog():
     st.subheader("Adjust your settings below:")
 
     available_models = info.get("models", {}).get("available_models", [])
+    current_model = st.session_state.settings.get("model")
+    
+    # Store the selected model in a variable
     model_selected = st.selectbox(
         "Select a model",
-    available_models
+        available_models,
+        index=available_models.index(current_model) if current_model in available_models else 0
     )
-    st.session_state.settings.update({"model": model_selected})
+    
+    # Only call the API if the model has changed
+    if model_selected != current_model:
+        success, message = update_model_api(model_selected)
+        
+        if success:
+            st.session_state.settings.update({"model": model_selected})
+            st.success(message)
+        else:
+            st.error(message)
 
 
 with header_col1:
@@ -111,7 +137,7 @@ if user_input:
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = st.markdown(send_message(user_input, model=model_selected))
+            response = st.markdown(send_message(user_input))
     
     st.session_state.messages.append({"role": "assistant", "content": response})
 

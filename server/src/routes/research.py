@@ -13,17 +13,13 @@ from utils.logging import logger
 from agents.main import agent
 from agents.rag import agent as rag_agent
 
-
-
 research_router = APIRouter()
 
 class ResearchMessage(BaseModel):
     message: str
-    model: str = "default"
 
 class ChatMessage(BaseModel):
     message: str
-    model: str = "default"
 
 class DocumentUpload(BaseModel):
     filename: str
@@ -149,7 +145,7 @@ async def document_indexing_endpoint(document: DocumentUpload):
         return APIResponse(**response)
     
 
-@research_router.post("/chat-docs", response_model=APIResponse)
+@research_router.post("/chat_docs", response_model=APIResponse)
 async def chat_documents_endpoint(query: ChatMessage):
     """
     Endpoint to handle queries against indexed documents.

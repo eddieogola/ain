@@ -62,17 +62,13 @@ available_models = {
 }
 
 
+# defaults
 _model_params = {
-    "model": MODEL_NAME,
-    "api_key": MODEL_API_KEY,
-    "base_url": MODEL_BASE_URL,
+    "model": available_models["Gemini 2.5 Flash"]["model"] if is_prod else MODEL_NAME,
+    "api_key": available_models["Gemini 2.5 Flash"]["api_key"] if is_prod else MODEL_API_KEY,
+    "base_url": available_models["Gemini 2.5 Flash"]["base_url"] if is_prod else MODEL_BASE_URL,
 }
 
-# _model_params = {
-#     "model": available_models["Gemini 2.5 Flash"]["model"],
-#     "api_key": available_models["Gemini 2.5 Flash"]["api_key"],
-#     "base_url": available_models["Gemini 2.5 Flash"]["base_url"],
-# }
 
 _embed_model_params = {
     "model": EMBEDDING_MODEL_NAME,
