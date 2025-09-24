@@ -55,6 +55,20 @@ async def research_endpoint(research_message: ResearchMessage):
         logger.debug(f"Model response: {model_response}")
 
         messages = model_response.get("messages")
+        report = model_response.get("final_report", None)
+
+        if report:
+
+            convo_messages.append(AIMessage(content=report))
+            response = {
+                "code": 200,
+                "status": "success",
+                "message": None,
+                "data": {
+                    "message": report,
+                }
+            }
+            return APIResponse(**response)
 
         if messages:
             logger.debug(f"Model response messages: {convo_messages}")

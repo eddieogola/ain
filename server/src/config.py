@@ -14,6 +14,7 @@ is_prod = True if os.getenv("ENVIRONMENT") == "prod" else False
 
 from langchain.chat_models import init_chat_model
 from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 # Environment variables
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
@@ -71,9 +72,7 @@ _model_params = {
 
 
 _embed_model_params = {
-    "model": EMBEDDING_MODEL_NAME,
-    "openai_api_base": MODEL_BASE_URL,
-    "api_key": MODEL_API_KEY,
+    "model_name": EMBEDDING_MODEL_NAME,
 }
 
 # create an absolute path to the uploads directory
@@ -89,7 +88,7 @@ class Config:
         self.web_search_client = TavilyClient(api_key=TAVILY_API_KEY)
         self.llm =  init_chat_model(**_model_params)
         self.writer_llm = init_chat_model(**_model_params)
-        self.embed_model = OpenAIEmbeddings(**_embed_model_params)
+        self.embed_model = HuggingFaceEmbeddings(**_embed_model_params) 
         self.short_term_memory = short_memory
         self.upload_dir = UPLOAD_DIR
         self.vector_store_dir = VECTOR_STORE_DIR
