@@ -6,8 +6,8 @@ import base64
 # FUNCTIONS 
     
 # Use server service name when running in Docker, localhost for local development
-# BASE_API_URL = "http://server:8000/api/v1"
-BASE_API_URL = "http://localhost:8000/api/v1"
+BASE_API_URL = "http://server:8000/api/v1"
+# BASE_API_URL = "http://localhost:8000/api/v1"
 CHAT_PDF = "Chat PDF"
 RESEARCH = "Research"
 

@@ -30,25 +30,25 @@ services:
     env_file:
       - ./server/.env
 
-    # depends_on:
-    #   - llm
-    #   - embedding-model
+    depends_on:
+      - llm
+      - embedding-model
 
-  # llm:
-  #   provider:
-  #     type: model
-  #     options:
-  #       model: ai/gemma3
-  #       runtime_flags:
-  #         - "--ctx-size"
-  #         - "32000"
-  #         - "--temp"
-  #         - "0.01"
-  # embedding-model:
-  #   provider:
-  #     type: model
-  #     options:
-  #       model: ai/embeddinggemma:latest
+  llm:
+    provider:
+      type: model
+      options:
+        model: ai/gemma3
+        runtime_flags:
+          - "--ctx-size"
+          - "32000"
+          - "--temp"
+          - "0.01"
+  embedding-model:
+    provider:
+      type: model
+      options:
+        model: ai/embeddinggemma:latest
 
   client:
     build:
